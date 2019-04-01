@@ -1,0 +1,74 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath('org.springframework.boot:spring-boot-gradle-plugin:2.1.4.RELEASE')
+  }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'jacoco'
+
+bootJar {
+  baseName = 'app'
+  version =  '1.0-SNAPSHOT'
+}
+
+repositories {
+  mavenCentral()
+  maven { url 'http://oss.jfrog.org/artifactory/oss-snapshot-local/' }
+}
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+// Apparently gradle is screwed for many things, including not supporting apt out of the box... needing hacks like this
+sourceSets.main.java.srcDirs += 'build/generated/sources/annotationProcessor/java/main'
+
+dependencies {
+
+  annotationProcessor 'org.immutables:value:2.7.4'
+  implementation 'org.immutables:value:2.7.4:annotations'
+  implementation 'org.immutables:builder:2.7.4'
+  implementation 'org.immutables:gson:2.7.4:annotations'
+
+  compile 'org.springframework.boot:spring-boot-starter-webflux'
+  compile 'org.springframework.boot:spring-boot-starter-security'
+  compile 'org.springframework.boot:spring-boot-starter-actuator'
+  compile 'io.jsonwebtoken:jjwt-impl:0.10.0'
+  compile 'io.jsonwebtoken:jjwt-jackson:0.10.0'
+  compile 'io.springfox:springfox-swagger2:3.0.0-SNAPSHOT'
+  compile 'io.springfox:springfox-swagger-ui:3.0.0-SNAPSHOT'
+  compile 'io.springfox:springfox-spring-webflux:3.0.0-SNAPSHOT'
+  compile 'com.github.davidmoten:rxjava2-jdbc:0.2.4'
+  
+  compile 'org.apache.derby:derby:10.14.1.0'
+  
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+  testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+  jacoco {
+    enabled = true
+    excludes = ['api.Application']
+  }
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled true
+    csv.enabled false
+  }
+  afterEvaluate {
+    classDirectories.from = files(classDirectories.files.collect {
+      fileTree(dir: it, exclude: 'api/Application.*')
+    })
+  }
+}
+
+check.dependsOn jacocoTestReport

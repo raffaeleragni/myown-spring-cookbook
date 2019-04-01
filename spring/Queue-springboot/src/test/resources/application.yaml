@@ -1,0 +1,20 @@
+spring:
+  profiles:
+    active: local
+
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+
+---
+spring:
+  profiles: local
+sqs:
+  mock:
+    enabled: true
+    randomPortEnabled: true
+  queues:
+    - name: 'queue'
+    - name: 'queue-out'
+    - name: 'queue-err'

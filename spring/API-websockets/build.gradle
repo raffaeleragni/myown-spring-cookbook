@@ -1,0 +1,68 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.4.RELEASE")
+  }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'jacoco'
+
+bootJar {
+  baseName = 'gs-messaging-stomp-websocket'
+  version =  '0.1.0'
+}
+
+sourceCompatibility = 12
+targetCompatibility = 12
+
+repositories {
+  mavenCentral()
+}
+
+// Apparently gradle is screwed for many things, including not supporting apt out of the box... needing hacks like this
+sourceSets.main.java.srcDirs += 'build/generated/sources/annotationProcessor/java/main'
+
+dependencies {
+  annotationProcessor 'org.immutables:value:2.7.4'
+  implementation 'org.immutables:value:2.7.4:annotations'
+  implementation 'org.immutables:builder:2.7.4'
+  implementation 'org.immutables:gson:2.7.4:annotations'
+
+  compile 'org.springframework.boot:spring-boot-starter-websocket'
+
+  compile("org.webjars:webjars-locator-core")
+  compile("org.webjars:sockjs-client:1.0.2")
+  compile("org.webjars:stomp-websocket:2.3.3")
+  compile("org.webjars:bootstrap:3.3.7")
+  compile("org.webjars:jquery:3.1.0")
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.4.1'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
+  testCompile 'org.springframework.boot:spring-boot-starter-test'
+}
+
+test {
+  jacoco {
+    enabled = true
+    excludes = ['api.Application']
+  }
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled true
+    csv.enabled false
+  }
+  afterEvaluate {
+    classDirectories.from = files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: 'api/Application.*')
+      })
+  }
+}
+
+check.dependsOn jacocoTestReport
